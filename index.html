@@ -1,1 +1,587 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Расписание и отметки</title>
+  <style>
+    /* Глобальные стили */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #e8f5e9; /* Светло-зелёный фон */
+      color: #2e7d32;    /* Тёмно-зелёный текст */
+      overflow-x: hidden;
+    }
+    h1 {
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+    }
+    /* Карточки с предметами */
+    .subject {
+      background: #c8e6c9;
+      border: 2px solid #66bb6a;
+      border-radius: 8px;
+      margin: 20px auto;
+      padding: 15px;
+      max-width: 600px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      opacity: 0;
+      animation: fadeIn 1s forwards;
+    }
+    /* Задержка анимации для последовательного появления карточек */
+    .subject:nth-child(1) { animation-delay: 0.2s; }
+    .subject:nth-child(2) { animation-delay: 0.4s; }
+    .subject:nth-child(3) { animation-delay: 0.6s; }
+    .subject:nth-child(4) { animation-delay: 0.8s; }
+    .subject:nth-child(5) { animation-delay: 1s; }
+    
+    /* Стили для кнопок внутри карточек */
+    .buttons {
+      margin-top: 10px;
+      text-align: center;
+    }
+    .buttons button {
+      background: #4caf50;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 15px;
+      margin: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.3s, transform 0.2s;
+    }
+    .buttons button:hover {
+      background: #43a047;
+      transform: scale(1.05);
+    }
+    .buttons button:active {
+      transform: scale(0.98);
+    }
+    
+    /* Стили для глобальных кнопок (отчётов) для старосты */
+    .report-btn {
+      display: block;
+      margin: 20px auto;
+      background: #2e7d32;
+      padding: 12px 20px;
+      font-size: 16px;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+    }
+    .report-btn:hover {
+      background: #27632a;
+      transform: scale(1.03);
+    }
+    
+    /* Стили для блока результата */
+    #result {
+      text-align: center;
+      font-size: 16px;
+      margin: 10px 0;
+    }
+    
+    /* Стили для блока отчёта */
+    #report {
+      margin: 20px auto;
+      max-width: 600px;
+      background: #a5d6a7;
+      border: 2px solid #66bb6a;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    #report h2 {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    #report div {
+      margin: 10px 0;
+      padding: 10px;
+      background: #e8f5e9;
+      border-radius: 4px;
+    }
+    
+    /* Анимации */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    .pulse {
+      animation: pulse 0.5s;
+    }
+  </style>
+  
+  <!-- Подключаем скрипты Telegram Web Apps и Firebase -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <h1>Расписание на сегодня</h1>
+  <div id="schedule"></div>
+  <div id="result"></div>
+  
+  <!-- Контейнер для отчётов -->
+  <div id="report"></div>
 
+  <script>
+    /***** Инициализация Firebase *****/
+    // Вставьте сюда свои данные из Firebase Console
+    const firebaseConfig = {
+  apiKey: "AIzaSyBRy07oPsvkEMglVsYgl4eYwEqe_Ha6hBk",
+  authDomain: "telegramattendanceproject.firebaseapp.com",
+  projectId: "telegramattendanceproject",
+  storageBucket: "telegramattendanceproject.firebasestorage.app",
+  messagingSenderId: "187275923015",
+  appId: "1:187275923015:web:dab6c5d859c994e41e6b62",
+  measurementId: "G-4T32BV5ZP2"
+};
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    /***** Инициализация Telegram Web Apps *****/
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    // Получаем данные пользователя (если тестируете вне Telegram, используется симуляция)
+    const user = tg.initDataUnsafe.user || { id: 111111, first_name: "Иван", last_name: "Иванов" };
+    const fullName = user.last_name ? `${user.first_name} ${user.last_name}` : user.first_name;
+    const telegramId = user.id;
+
+    // Сохраняем пользователя в коллекцию "users" для формирования общего списка группы
+    db.collection("users")
+      .doc(String(telegramId))
+      .set({ telegramId, name: fullName }, { merge: true })
+      .then(() => console.log("Пользователь сохранён/обновлён в 'users'"))
+      .catch(error => console.error("Ошибка сохранения пользователя:", error));
+
+    /***** Настройки для старосты и членов группы *****/
+    const CLASS_REP_IDS = [1838974757]; // Замените на реальные Telegram ID старост
+    // Список членов группы (при необходимости замените на динамическое получение)
+    const GROUP_MEMBERS = [
+      { telegramId: 927092679, name: "Иванов Егор" },
+      { telegramId: 5299194206, name: "Хацкевич Влад" },
+      { telegramId: 1874576256, name: "Сыс Кирилл" },
+      { telegramId: 1055899565, name: "Грак Богдан" },
+      { telegramId: 802486943, name: "Урбан Артур" },
+      { telegramId: 1229601518, name: "Левченко Егор" },
+      { telegramId: 1290930048, name: "Куприк Влад" },
+      { telegramId: 1399296785, name: "Лойко Егор" },
+      { telegramId: 1160372409, name: "Мархель Егор" },
+      { telegramId: 1095759616, name: "Метелица Зарина" },
+      { telegramId: 1286590440, name: "Цалко Ксения" },
+      { telegramId: 1486592466, name: "Башлыкова Анна" },
+      { telegramId: 690914825, name: "Гаврилович Захар" },
+      { telegramId: 5300094240, name: "Рыбак Татьяна" },
+      { telegramId: 6748017272, name: "Тарасов Петр" },
+      { telegramId: 946076143, name: "Якович Яна" },
+      { telegramId: 1028263877, name: "Фомин Константин" },
+      { telegramId: 5102007037, name: "Соколовский Евгений" },
+      { telegramId: 1200327387, name: "Савастюк Илья" },
+      { telegramId: 854046654, name: "Леднев Матвей" },
+      { telegramId: 945548811, name: "Ярош Александр" },
+      { telegramId: 1021548740, name: "Дроздов Владислав" },
+      { telegramId: 1350118529, name: "Матющенков Станислав" },
+      { telegramId: 6305094965, name: "Махранков Кирилл" },
+      { telegramId: 2068500305, name: "Малиновский Егор" },
+      { telegramId: 1164830732, name: "Ботвинников Артем" }
+      
+      // Добавьте остальных членов группы
+    ];
+
+    /***** Если пользователь является старостой, добавляем кнопки для формирования отчётов *****/
+    if (CLASS_REP_IDS.includes(telegramId)) {
+      // Отчёт по отсутствующим по предметам
+      const reportSubjectsBtn = document.createElement('button');
+      reportSubjectsBtn.textContent = "Показать отчёт по отсутствующим";
+      reportSubjectsBtn.className = "report-btn";
+      reportSubjectsBtn.onclick = showSubjectReport;
+      document.body.insertBefore(reportSubjectsBtn, document.getElementById('report'));
+
+      // Список не отписавшихся по всем предметам (по каждому предмету)
+      const missingBtn = document.createElement('button');
+      missingBtn.textContent = "Показать список не отписавшихся";
+      missingBtn.className = "report-btn";
+      missingBtn.style.background = "#1b5e20";
+      missingBtn.onclick = showMissingSubmissions;
+      document.body.insertBefore(missingBtn, document.getElementById('report'));
+
+      // Кнопка для дневного отчёта
+      const dailyReportBtn = document.createElement('button');
+      dailyReportBtn.textContent = "Сформировать отчёт за день";
+      dailyReportBtn.className = "report-btn";
+      dailyReportBtn.style.background = "#1565c0";
+      dailyReportBtn.onclick = showDailyReport;
+      document.body.insertBefore(dailyReportBtn, document.getElementById('report'));
+
+      // Кнопка для недельного отчёта
+      const weeklyReportBtn = document.createElement('button');
+      weeklyReportBtn.textContent = "Сформировать недельный отчёт";
+      weeklyReportBtn.className = "report-btn";
+      weeklyReportBtn.style.background = "#0d47a1";
+      weeklyReportBtn.onclick = showWeeklyReport;
+      document.body.insertBefore(weeklyReportBtn, document.getElementById('report'));
+    }
+
+    /***** Логика расписания *****/
+  const schedule_week1 = {
+  "Понедельник": ["Математика практ.", "Математика лекция", "Физика Л/Р"],
+  "Вторник": ["ОКТ лекция", "Английский", "ИГ"],
+  "Среда": ["Физкультура", "Информатика Л/Р"],
+  "Четверг": ["ОКТ практика", "Физика лекция", "Информатика лекция", "Китайский практика"],
+  "Пятница": ["Английский", "Физика лекция", "Физика практ.", "Китайский практ."],
+  "Суббота": ["Физкультура"]
+};
+
+const schedule_week2 = {
+  "Понедельник": ["Математика практ.", "Математика лекция", "Кураторский час"],
+  "Вторник": ["ОКТ лекция", "Английский", "ИГ"],
+  "Среда": ["Физкультура", "Современная политэкономия лекция", "Информатика Л/Р"],
+  "Четверг": ["Китайский практ.", "Физика лекция", "Информатика лекция", "Китайский практика 2"],
+  "Пятница": ["Современная политэкономия практ.", "Математика лекция", "Математика практ.", "Китайский практ."],
+  "Суббота": ["Физкультура"]
+};
+
+function isWeek1() {
+  const refDate = new Date(2025, 1, 10); // 10 февраля 2025
+  const today = new Date();
+  const deltaDays = Math.floor((today - refDate) / (1000 * 60 * 60 * 24));
+  const weekNumber = Math.floor(deltaDays / 7);
+  return weekNumber % 2 !== 0; // 10 февраля - начало со 2 недели
+}
+
+function getTodaySchedule() {
+  const days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
+  const today = new Date().getDay();
+  const weekSchedule = isWeek1() ? schedule_week1 : schedule_week2;
+  return weekSchedule[days[today]] || [];
+}
+
+const todaySchedule = getTodaySchedule();
+
+    /***** Отображение расписания *****/
+    const scheduleDiv = document.getElementById('schedule');
+    todaySchedule.forEach(subject => {
+      const subjectDiv = document.createElement('div');
+      subjectDiv.className = 'subject';
+      subjectDiv.innerHTML = `<h3>${subject}</h3>`;
+      const buttonsDiv = document.createElement('div');
+      buttonsDiv.className = 'buttons';
+
+      // Кнопка "Буду присутствовать"
+      const btnPresent = document.createElement('button');
+      btnPresent.textContent = 'Буду присутствовать';
+      btnPresent.onclick = () => {
+        btnPresent.classList.add('pulse');
+        submitAttendance(subject, 'присутствовал');
+        setTimeout(() => btnPresent.classList.remove('pulse'), 500);
+      };
+      buttonsDiv.appendChild(btnPresent);
+
+      // Кнопка "Не буду (уважительная причина)"
+      const btnAbsentValid = document.createElement('button');
+      btnAbsentValid.textContent = 'Не буду (уважительная причина)';
+      btnAbsentValid.onclick = () => {
+        btnAbsentValid.classList.add('pulse');
+        submitAttendance(subject, 'отсутствовал (уважительная причина)');
+        setTimeout(() => btnAbsentValid.classList.remove('pulse'), 500);
+      };
+      buttonsDiv.appendChild(btnAbsentValid);
+
+      // Кнопка "Не буду (неуважительная причина)"
+      const btnAbsentInvalid = document.createElement('button');
+      btnAbsentInvalid.textContent = 'Не буду (неуважительная причина)';
+      btnAbsentInvalid.onclick = () => {
+        btnAbsentInvalid.classList.add('pulse');
+        submitAttendance(subject, 'отсутствовал (неуважительная причина)');
+        setTimeout(() => btnAbsentInvalid.classList.remove('pulse'), 500);
+      };
+      buttonsDiv.appendChild(btnAbsentInvalid);
+
+      subjectDiv.appendChild(buttonsDiv);
+      scheduleDiv.appendChild(subjectDiv);
+    });
+
+    /***** Функция отправки отметки в Firestore *****/
+    function submitAttendance(subject, status) {
+      const todayStr = new Date().toISOString().split("T")[0];
+      db.collection("attendance").add({
+        telegramId,
+        name: fullName,
+        subject,
+        status,
+        date: todayStr
+      })
+      .then(() => {
+        document.getElementById('result').textContent = `Отметка для "${subject}" сохранена.`;
+      })
+      .catch(error => {
+        document.getElementById('result').textContent = `Ошибка: ${error}`;
+      });
+    }
+
+    /***** Функция отчёта по отсутствующим по предметам *****/
+    function showSubjectReport() {
+      const todayStr = new Date().toISOString().split("T")[0];
+      let reportHTML = `<h2>Отчёт по отсутствующим по предметам (${todayStr})</h2>`;
+      const promises = todaySchedule.map(subject => {
+        return db.collection("attendance")
+          .where("date", "==", todayStr)
+          .where("subject", "==", subject)
+          .where("status", "!=", "присутствовал")
+          .get()
+          .then(querySnapshot => {
+            let listItems = "";
+            querySnapshot.forEach(doc => {
+              const data = doc.data();
+              listItems += `<li>${data.name} (ID: ${data.telegramId}) — ${data.status}</li>`;
+            });
+            if (listItems) {
+              reportHTML += `<div style="border:1px solid #888; padding:10px; margin:10px 0;">
+                <h3>${subject}</h3>
+                <ul>${listItems}</ul>
+              </div>`;
+            } else {
+              reportHTML += `<div style="border:1px solid #888; padding:10px; margin:10px 0;">
+                <h3>${subject}</h3>
+                <p>Все отписались или отсутствующих нет.</p>
+              </div>`;
+            }
+          });
+      });
+      Promise.all(promises).then(() => {
+        // Дополнительный раздел: студенты, которые вообще не отписались за сегодняшний день
+        db.collection("attendance")
+          .where("date", "==", todayStr)
+          .get()
+          .then(querySnapshot => {
+            const allSubmittedIds = new Set();
+            querySnapshot.forEach(doc => {
+              allSubmittedIds.add(doc.data().telegramId);
+            });
+            let globalMissing = [];
+            GROUP_MEMBERS.forEach(member => {
+              if (!allSubmittedIds.has(member.telegramId)) {
+                globalMissing.push(member);
+              }
+            });
+            if (globalMissing.length > 0) {
+              reportHTML += `<div style="border:1px dashed #e53935; padding:10px; margin:10px 0;">
+                <h3>Студенты, не отписавшиеся вообще:</h3>
+                <ul>`;
+              globalMissing.forEach(member => {
+                reportHTML += `<li>${member.name} (ID: ${member.telegramId})</li>`;
+              });
+              reportHTML += `</ul></div>`;
+            }
+            document.getElementById('report').innerHTML = reportHTML;
+          })
+          .catch(error => {
+            document.getElementById('report').textContent = `Ошибка при получении глобальных данных: ${error}`;
+          });
+      });
+    }
+
+    /***** Функция для списка студентов, не отписавшихся по всем предметам *****/
+    function showMissingSubmissions() {
+      const todayStr = new Date().toISOString().split("T")[0];
+      db.collection("attendance")
+        .where("date", "==", todayStr)
+        .get()
+        .then(querySnapshot => {
+          const attendanceMap = {};
+          querySnapshot.forEach(doc => {
+            const data = doc.data();
+            if (!attendanceMap[data.telegramId]) {
+              attendanceMap[data.telegramId] = new Set();
+            }
+            attendanceMap[data.telegramId].add(data.subject);
+          });
+          let reportHTML = `<h2>Список не отписавшихся по всем предметам (${todayStr})</h2>`;
+          GROUP_MEMBERS.forEach(member => {
+            const markedSubjects = attendanceMap[member.telegramId] || new Set();
+            const missingSubjects = todaySchedule.filter(subject => !markedSubjects.has(subject));
+            if (missingSubjects.length > 0) {
+              reportHTML += `<div style="border:1px solid #888; padding:10px; margin:10px 0;">
+                <strong>${member.name}</strong> (ID: ${member.telegramId})<br>
+                Не отписали: ${missingSubjects.join(', ')}
+              </div>`;
+            }
+          });
+          document.getElementById('report').innerHTML = reportHTML;
+        })
+        .catch(error => {
+          document.getElementById('report').textContent = `Ошибка при получении данных: ${error}`;
+        });
+    }
+
+    /***** Функция формирования дневного отчёта *****
+     * Для каждого предмета за текущий день показывается:
+     * – Список студентов, отписавшихся (с указанием причины)
+     * – Список студентов, не отписавшихся по данному предмету.
+     * Дополнительно выводится раздел с глобальным списком студентов, которые вообще не отписались.
+     */
+    function showDailyReport() {
+      const todayStr = new Date().toISOString().split("T")[0];
+      let reportHTML = `<h2>Дневной отчёт (${todayStr})</h2>`;
+      const promises = todaySchedule.map(subject => {
+        return db.collection("attendance")
+          .where("date", "==", todayStr)
+          .where("subject", "==", subject)
+          .get()
+          .then(querySnapshot => {
+            let submitted = [];
+            querySnapshot.forEach(doc => {
+              const data = doc.data();
+              submitted.push({ telegramId: data.telegramId, name: data.name, status: data.status });
+            });
+            const submittedIds = submitted.map(item => item.telegramId);
+            let missing = [];
+            GROUP_MEMBERS.forEach(member => {
+              if (!submittedIds.includes(member.telegramId)) {
+                missing.push(member);
+              }
+            });
+            reportHTML += `<div style="border:1px solid #888; padding:10px; margin:10px 0;">
+              <h3>${subject}</h3>`;
+            if (submitted.length > 0) {
+              reportHTML += "<p><strong>Отметившиеся:</strong></p><ul>";
+              submitted.forEach(item => {
+                reportHTML += `<li>${item.name} (ID: ${item.telegramId}) — ${item.status}</li>`;
+              });
+              reportHTML += "</ul>";
+            } else {
+              reportHTML += "<p>Никто не отписался по этому предмету.</p>";
+            }
+            if (missing.length > 0) {
+              reportHTML += "<p><strong>Не отписались:</strong></p><ul>";
+              missing.forEach(member => {
+                reportHTML += `<li>${member.name} (ID: ${member.telegramId})</li>`;
+              });
+              reportHTML += "</ul>";
+            } else {
+              reportHTML += "<p>Все отписались по этому предмету.</p>";
+            }
+            reportHTML += "</div>";
+          });
+      });
+      Promise.all(promises).then(() => {
+        // Формируем раздел для глобально не отписавшихся студентов за день
+        db.collection("attendance")
+          .where("date", "==", todayStr)
+          .get()
+          .then(querySnapshot => {
+            const allSubmittedIds = new Set();
+            querySnapshot.forEach(doc => {
+              allSubmittedIds.add(doc.data().telegramId);
+            });
+            let globalMissing = [];
+            GROUP_MEMBERS.forEach(member => {
+              if (!allSubmittedIds.has(member.telegramId)) {
+                globalMissing.push(member);
+              }
+            });
+            if (globalMissing.length > 0) {
+              reportHTML += `<div style="border:1px dashed #e53935; padding:10px; margin:10px 0;">
+                <h3>Студенты, не отписавшиеся вообще:</h3>
+                <ul>`;
+              globalMissing.forEach(member => {
+                reportHTML += `<li>${member.name} (ID: ${member.telegramId})</li>`;
+              });
+              reportHTML += "</ul></div>";
+            }
+            document.getElementById('report').innerHTML = reportHTML;
+          })
+          .catch(error => {
+            document.getElementById('report').textContent = `Ошибка при получении глобальных данных: ${error}`;
+          });
+      });
+    }
+
+    /***** Функция формирования недельного отчёта *****
+     * Вычисляем понедельник и воскресенье текущей недели,
+     * затем запрашиваем записи за неделю и для каждого студента выводим сводку.
+     * Дополнительно в конце выводим раздел со студентами, которые не отписывались вообще за неделю.
+     */
+    function showWeeklyReport() {
+      const today = new Date();
+      const day = today.getDay(); // 0 (воскресенье) - 6 (суббота)
+      const diffToMonday = day === 0 ? 6 : day - 1;
+      const monday = new Date(today);
+      monday.setDate(today.getDate() - diffToMonday);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      const mondayStr = monday.toISOString().split("T")[0];
+      const sundayStr = sunday.toISOString().split("T")[0];
+
+      let reportHTML = `<h2>Недельный отчёт (${mondayStr} - ${sundayStr})</h2>`;
+      db.collection("attendance")
+        .where("date", ">=", mondayStr)
+        .where("date", "<=", sundayStr)
+        .get()
+        .then(querySnapshot => {
+          const studentRecords = {};
+          querySnapshot.forEach(doc => {
+            const data = doc.data();
+            if (!studentRecords[data.telegramId]) {
+              studentRecords[data.telegramId] = { name: data.name, records: [] };
+            }
+            studentRecords[data.telegramId].records.push({
+              subject: data.subject,
+              status: data.status,
+              date: data.date
+            });
+          });
+          GROUP_MEMBERS.forEach(member => {
+            reportHTML += `<div style="border:1px solid #888; padding:10px; margin:10px 0;">`;
+            reportHTML += `<h3>${member.name} (ID: ${member.telegramId})</h3>`;
+            const rec = studentRecords[member.telegramId];
+            if (rec && rec.records.length > 0) {
+              reportHTML += "<ul>";
+              rec.records.forEach(r => {
+                reportHTML += `<li>${r.date} – ${r.subject}: ${r.status}</li>`;
+              });
+              reportHTML += "</ul>";
+            } else {
+              reportHTML += `<p>Студент не отписывался за неделю.</p>`;
+            }
+            reportHTML += "</div>";
+          });
+          // Дополнительный раздел: студенты, которые вообще не отписывались за неделю
+          let globalMissing = [];
+          GROUP_MEMBERS.forEach(member => {
+            if (!studentRecords[member.telegramId]) {
+              globalMissing.push(member);
+            }
+          });
+          if (globalMissing.length > 0) {
+            reportHTML += `<div style="border:2px dashed #e53935; padding:10px; margin:10px 0;">
+              <h3>Студенты, не отписывавшиеся вообще за неделю:</h3>
+              <ul>`;
+            globalMissing.forEach(member => {
+              reportHTML += `<li>${member.name} (ID: ${member.telegramId})</li>`;
+            });
+            reportHTML += "</ul></div>";
+          }
+          document.getElementById('report').innerHTML = reportHTML;
+        })
+        .catch(error => {
+          document.getElementById('report').textContent = `Ошибка при формировании недельного отчёта: ${error}`;
+        });
+    }
+  </script>
+</body>
+</html>
