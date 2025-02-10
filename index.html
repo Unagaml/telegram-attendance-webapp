@@ -96,12 +96,18 @@
       background: #27632a;
       transform: scale(1.03);
     }
+    /* Убираем стандартную обводку у кнопок в фокусе */
+    .report-btn:focus, .buttons button:focus {
+      outline: none;
+    }
     
-    /* Стили для блока результата */
+    /* Стили для блока результата – убираем фон и границы */
     #result {
       text-align: center;
       font-size: 16px;
       margin: 10px 0;
+      background: none;
+      border: none;
     }
     
     /* Стили для блока отчёта */
