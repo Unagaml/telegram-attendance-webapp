@@ -1,8 +1,8 @@
-// Инициализация Telegram Web Apps
+// Инициализация Telegram Web Apps (также используется в config.js, но здесь повторно для удобства)
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-// Получаем данные пользователя (при отсутствии используется симуляция)
+// Получаем данные пользователя (при отсутствии — симуляция)
 const user = tg.initDataUnsafe.user || { id: 111111, first_name: "Иван", last_name: "Иванов" };
 const fullName = user.last_name ? `${user.first_name} ${user.last_name}` : user.first_name;
 const telegramId = user.id;
@@ -29,6 +29,9 @@ const groupId = currentGroup.id;
 const schedule_week1 = currentGroup.schedule_week1;
 const schedule_week2 = currentGroup.schedule_week2;
 
+// Флаг, определяющий, является ли пользователь старостой
+const isLeader = leaderIds.includes(telegramId);
+
 // Отображение даты и номера группы
 function displayCurrentDateAndGroup() {
   const now = new Date();
@@ -42,3 +45,37 @@ function displayCurrentDateAndGroup() {
   document.getElementById("groupInfo").textContent = `Группа: ${groupId}`;
 }
 displayCurrentDateAndGroup();
+
+// После загрузки страницы (все скрипты уже подключены) добавляем кнопки для старосты, если нужно
+window.addEventListener("load", function(){
+  if (isLeader) {
+    const reportContainer = document.getElementById('report');
+    
+    const reportSubjectsBtn = document.createElement('button');
+    reportSubjectsBtn.textContent = "Показать отчёт по отсутствующим";
+    reportSubjectsBtn.className = "report-btn";
+    reportSubjectsBtn.onclick = showSubjectReport;
+    document.body.insertBefore(reportSubjectsBtn, reportContainer);
+
+    const missingBtn = document.createElement('button');
+    missingBtn.textContent = "Показать список не отписавшихся";
+    missingBtn.className = "report-btn";
+    missingBtn.style.background = "#1b5e20";
+    missingBtn.onclick = showMissingSubmissions;
+    document.body.insertBefore(missingBtn, reportContainer);
+
+    const dailyReportBtn = document.createElement('button');
+    dailyReportBtn.textContent = "Сформировать отчёт за день";
+    dailyReportBtn.className = "report-btn";
+    dailyReportBtn.style.background = "#1565c0";
+    dailyReportBtn.onclick = showDailyReport;
+    document.body.insertBefore(dailyReportBtn, reportContainer);
+
+    const weeklyReportBtn = document.createElement('button');
+    weeklyReportBtn.textContent = "Сформировать недельный отчёт";
+    weeklyReportBtn.className = "report-btn";
+    weeklyReportBtn.style.background = "#0d47a1";
+    weeklyReportBtn.onclick = showWeeklyReport;
+    document.body.insertBefore(weeklyReportBtn, reportContainer);
+  }
+});
