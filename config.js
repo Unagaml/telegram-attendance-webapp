@@ -1,4 +1,4 @@
-const maintenanceMode = false;
+const maintenanceMode = true;
 if (maintenanceMode) {
   document.body.innerHTML = `
     <div style="text-align: center; margin-top: 50px;">
