@@ -24,6 +24,7 @@ if (productionGroup.members.some(member => member.telegramId === telegramId)) {
 }
 
 // Глобальные переменные текущей группы
+const leaderIds = [1838974757];
 const GROUP_MEMBERS = currentGroup.members;
 const groupId = currentGroup.id;
 const schedule_week1 = currentGroup.schedule_week1;
