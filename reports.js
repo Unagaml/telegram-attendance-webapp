@@ -1,4 +1,6 @@
-// Отправка всех отметок (пользователь может отправить данные только один раз в день)
+// reports.js
+
+// Функция отправки всех отметок (пользователь может отправить данные только один раз в день)
 function sendAllAttendance() {
   const sendButton = document.getElementById('sendAttendanceBtn');
   if (sendButton.disabled) return;
@@ -24,7 +26,7 @@ function sendAllAttendance() {
             return;
           }
         }
-        // Отправляем данные для каждого предмета с уникальным id
+        // Отправляем данные для каждого предмета с уникальным ID
         let promises = [];
         todaySchedule.forEach(subject => {
           const status = attendanceSelections[subject];
