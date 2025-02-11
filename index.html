@@ -432,9 +432,16 @@
 
     /***** Функция отправки всех отметок (для студента) *****/
     function sendAllAttendance() {
+      const sendButton = document.getElementById('sendAttendanceBtn');
+      // Если кнопка уже отключена, выходим из функции
+      if (sendButton.disabled) return;
+
+      // Сразу отключаем кнопку, чтобы предотвратить повторные клики
+      sendButton.disabled = true;
+
       const todayStr = new Date().toISOString().split("T")[0];
 
-      // Сначала проверяем, отправлял ли пользователь данные за сегодня
+      // Проверяем, отправлял ли пользователь данные за сегодня
       db.collection("attendance")
         .where("telegramId", "==", telegramId)
         .where("date", "==", todayStr)
@@ -442,13 +449,15 @@
         .then(querySnapshot => {
           if (!querySnapshot.empty) {
             alert("Вы уже отправили данные за сегодня.");
-            document.getElementById('sendAttendanceBtn').disabled = true;
+            // Кнопка остаётся отключённой
             return;
           } else {
             // Проверяем, что для каждого предмета выбрана отметка
             for (let subject of todaySchedule) {
               if (!attendanceSelections[subject]) {
                 alert("Пожалуйста, выберите отметку для " + subject);
+                // Разрешаем повторное нажатие, если выбор не завершён
+                sendButton.disabled = false;
                 return;
               }
             }
@@ -467,18 +476,17 @@
                 }, { merge: true })
               );
             });
-            Promise.all(promises)
-              .then(() => {
-                document.getElementById('result').textContent = "Все отметки успешно отправлены.";
-                document.getElementById('sendAttendanceBtn').disabled = true;
-              })
-              .catch(error => {
-                document.getElementById('result').textContent = `Ошибка: ${error}`;
-              });
+            return Promise.all(promises);
           }
+        })
+        .then(() => {
+          // Если отправка успешна, выводим сообщение
+          document.getElementById('result').textContent = "Все отметки успешно отправлены.";
         })
         .catch(error => {
           document.getElementById('result').textContent = `Ошибка: ${error}`;
+          // В случае ошибки, разрешаем повторную отправку
+          sendButton.disabled = false;
         });
     }
     document.getElementById('sendAttendanceBtn').onclick = sendAllAttendance;
