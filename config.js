@@ -1,3 +1,4 @@
+// Режим обслуживания: установите true, если сайт на обслуживании
 const maintenanceMode = false;
 if (maintenanceMode) {
   document.body.innerHTML = `
@@ -6,10 +7,11 @@ if (maintenanceMode) {
       <p>Пожалуйста, зайдите позже.</p>
     </div>
   `;
+  // Прерываем дальнейшее выполнение скриптов
   throw new Error("Maintenance mode enabled");
 }
 
-
+// Инициализация Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyBRy07oPsvkEMglVsYgl4eYwEqe_Ha6hBk",
   authDomain: "telegramattendanceproject.firebaseapp.com",
@@ -22,7 +24,9 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+/* Определение групп */
 
+// Продакшн-группа
 const productionGroup = {
   id: "10114124",
   members: [
@@ -71,7 +75,7 @@ const productionGroup = {
   }
 };
 
-
+// Тестовая группа
 const testGroup = {
   id: "10114124_test",
   members: [
