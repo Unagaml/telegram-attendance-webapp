@@ -1,5 +1,3 @@
-// reports.js
-
 // Функция отправки всех отметок (пользователь может отправить данные только один раз в день)
 function sendAllAttendance() {
   const sendButton = document.getElementById('sendAttendanceBtn');
@@ -225,5 +223,34 @@ function showWeeklyReport() {
     })
     .catch(error => {
       document.getElementById('report').textContent = `Ошибка при формировании недельного отчёта: ${error}`;
+    });
+}
+
+// Пример функции для показа списка не отписавшихся (если требуется)
+function showMissingSubmissions() {
+  const todayStr = new Date().toISOString().split("T")[0];
+  db.collection("attendance")
+    .where("date", "==", todayStr)
+    .get()
+    .then(querySnapshot => {
+      const submittedIds = new Set();
+      querySnapshot.forEach(doc => {
+        submittedIds.add(doc.data().telegramId);
+      });
+      let missingMembers = GROUP_MEMBERS.filter(member => !submittedIds.has(member.telegramId));
+      let reportHTML = `<h2>Список не отписавшихся (${todayStr})</h2>`;
+      if (missingMembers.length > 0) {
+        reportHTML += "<ul>";
+        missingMembers.forEach(member => {
+          reportHTML += `<li>${member.name} (ID: ${member.telegramId})</li>`;
+        });
+        reportHTML += "</ul>";
+      } else {
+        reportHTML += "<p>Все отписались.</p>";
+      }
+      document.getElementById('report').innerHTML = reportHTML;
+    })
+    .catch(error => {
+      document.getElementById('report').textContent = `Ошибка при получении данных: ${error}`;
     });
 }
