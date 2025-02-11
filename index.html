@@ -192,6 +192,18 @@
   <div id="report"></div>
   
   <script>
+    /***** Режим обслуживания *****/
+    const maintenanceMode = false; // Установите true, чтобы включить режим обслуживания
+    if (maintenanceMode) {
+      document.body.innerHTML = `
+        <div style="text-align: center; margin-top: 50px;">
+          <h1>Сайт временно закрыт на обслуживание</h1>
+          <p>Пожалуйста, зайдите позже.</p>
+        </div>
+      `;
+      throw new Error("Maintenance mode enabled");
+    }
+
     /***** ВАЖНО: Правила доступа Firestore *****
      * Если появляется ошибка "FirebaseError: [code=permission-denied]: Missing or insufficient permissions",
      * необходимо настроить правила доступа Firestore в консоли Firebase, например, для тестирования:
@@ -216,7 +228,6 @@
       appId: "1:187275923015:web:dab6c5d859c994e41e6b62",
       measurementId: "G-4T32BV5ZP2"
     };
-    
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
@@ -229,16 +240,8 @@
     const fullName = user.last_name ? `${user.first_name} ${user.last_name}` : user.first_name;
     const telegramId = user.id;
 
-    // Сохраняем пользователя в коллекцию "users" для формирования общего списка группы
-    db.collection("users")
-      .doc(String(telegramId))
-      .set({ telegramId, name: fullName }, { merge: true })
-      .then(() => console.log("Пользователь сохранён/обновлён в 'users'"))
-      .catch(error => console.error("Ошибка сохранения пользователя:", error));
-
-    /***** Настройки для старосты и членов группы *****/
-    const CLASS_REP_IDS = [1838974757]; // Замените на реальные Telegram ID старост
-    // Список членов группы (при необходимости замените на динамическое получение)
+    /***** Ограничение доступа: разрешены только пользователи, указанные в GROUP_MEMBERS *****/
+    // Список членов группы (разрешённых пользователей)
     const GROUP_MEMBERS = [
       { telegramId: 927092679, name: "Иванов Егор" },
       { telegramId: 5299194206, name: "Хацкевич Влад" },
@@ -266,8 +269,22 @@
       { telegramId: 6305094965, name: "Махранков Кирилл" },
       { telegramId: 2068500305, name: "Малиновский Егор" },
       { telegramId: 1164830732, name: "Ботвинников Артем" }
-      // Добавьте остальных членов группы
+      // Добавьте остальных членов группы, если нужно
     ];
+    // Проверяем, есть ли telegramId пользователя в разрешённом списке
+    const allowedIDs = GROUP_MEMBERS.map(member => member.telegramId);
+    if (!allowedIDs.includes(telegramId)) {
+      document.body.innerHTML = `
+        <div style="text-align: center; margin-top: 50px;">
+          <h1>Доступ запрещен</h1>
+          <p>Ваш аккаунт не имеет доступа к этому сайту.</p>
+        </div>
+      `;
+      throw new Error("Access denied");
+    }
+
+    /***** Настройки для старосты (только для старост) *****/
+    const CLASS_REP_IDS = [1838974757]; // Замените на реальные Telegram ID старост
 
     // Если пользователь не является старостой, скрываем контейнер для отчётов
     if (!CLASS_REP_IDS.includes(telegramId)) {
