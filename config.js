@@ -31,7 +31,7 @@ const db = firebase.firestore();
 const productionGroup = {
   id: "10114124",
   members: [
-    { telegramId: 1838974757, name: "Иванов Егор" },
+    { telegramId: 927092679, name: "Иванов Егор" },
     { telegramId: 5299194206, name: "Хацкевич Влад" },
     { telegramId: 1874576256, name: "Сыс Кирилл" },
     { telegramId: 1055899565, name: "Грак Богдан" },
