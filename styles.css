@@ -16,7 +16,7 @@ h1 {
   font-size: 28px;
 }
 
-/* Стили для даты и номера группы */
+/* Стили для отображения даты и номера группы */
 #currentDate {
   text-align: center;
   font-size: 20px;
@@ -92,7 +92,7 @@ h1 {
   color: #fff;
   border: none;
   border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
   cursor: pointer;
   transition: background 0.3s, transform 0.2s;
   width: 90%;
@@ -159,7 +159,7 @@ h1 {
   animation: pulse 0.5s;
 }
 
-/* Скрываем пустые блоки, чтобы не было лишнего прямоугольника */
+/* Скрываем пустые блоки, чтобы убрать лишние прямоугольники */
 div:empty {
   display: none;
 }
