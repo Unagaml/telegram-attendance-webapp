@@ -1,7 +1,8 @@
+// Инициализация Telegram Web Apps
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-// Получаем данные пользователя (при отсутствии — симуляция)
+// Получаем данные пользователя (при отсутствии используется симуляция)
 const user = tg.initDataUnsafe.user || { id: 111111, first_name: "Иван", last_name: "Иванов" };
 const fullName = user.last_name ? `${user.first_name} ${user.last_name}` : user.first_name;
 const telegramId = user.id;
