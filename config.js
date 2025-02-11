@@ -1,3 +1,5 @@
+// config.js
+
 // Режим обслуживания: установите true, если сайт находится на обслуживании
 const maintenanceMode = false;
 if (maintenanceMode) {
