@@ -1,4 +1,4 @@
-// Режим обслуживания: установите true, если сайт на обслуживании
+// Режим обслуживания: установите true, если сайт находится на обслуживании
 const maintenanceMode = false;
 if (maintenanceMode) {
   document.body.innerHTML = `
@@ -7,7 +7,6 @@ if (maintenanceMode) {
       <p>Пожалуйста, зайдите позже.</p>
     </div>
   `;
-  // Прерываем дальнейшее выполнение скриптов
   throw new Error("Maintenance mode enabled");
 }
 
@@ -38,7 +37,7 @@ const productionGroup = {
     { telegramId: 1229601518, name: "Левченко Егор" },
     { telegramId: 1290930048, name: "Куприк Влад" },
     { telegramId: 1399296785, name: "Лойко Егор" },
-    { telegramId: 1160372409, name: "Мархель Егор" },
+    { telegramId: 1164830732, name: "Мархель Егор" },
     { telegramId: 1095759616, name: "Метелица Зарина" },
     { telegramId: 1286590440, name: "Цалко Ксения" },
     { telegramId: 1486592466, name: "Башлыкова Анна" },
@@ -100,3 +99,6 @@ const testGroup = {
     "Суббота": ["Тестовая физкультура"]
   }
 };
+
+/* Добавляем переменную для ID старосты */
+const leaderIds = [1838974757]; // Здесь указан ID старосты
