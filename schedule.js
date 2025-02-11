@@ -1,5 +1,3 @@
-
-// Функция определения, какая неделя (1-я или 2-я)
 function isWeek1() {
   const refDate = new Date(2025, 1, 10); // 10 февраля 2025
   const today = new Date();
