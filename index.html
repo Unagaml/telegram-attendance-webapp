@@ -188,6 +188,8 @@
   </div>
   
   <div id="result"></div>
+  <!-- Контейнер для отчётов (отображается у старосты) -->
+  <div id="report"></div>
   
   <script>
     /***** ВАЖНО: Правила доступа Firestore *****
@@ -234,19 +236,6 @@
       .then(() => console.log("Пользователь сохранён/обновлён в 'users'"))
       .catch(error => console.error("Ошибка сохранения пользователя:", error));
 
-    /***** Отображение текущей даты *****/
-    function displayCurrentDate() {
-      const now = new Date();
-      const days = ["Воскресенье","Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"];
-      const months = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
-      const dayName = days[now.getDay()];
-      const dateNum = now.getDate();
-      const monthName = months[now.getMonth()];
-      const year = now.getFullYear();
-      document.getElementById("currentDate").textContent = `Сегодня: ${dateNum} ${monthName} ${year}, ${dayName}`;
-    }
-    displayCurrentDate();
-
     /***** Настройки для старосты и членов группы *****/
     const CLASS_REP_IDS = [1838974757]; // Замените на реальные Telegram ID старост
     // Список членов группы (при необходимости замените на динамическое получение)
@@ -279,6 +268,14 @@
       { telegramId: 1164830732, name: "Ботвинников Артем" }
       // Добавьте остальных членов группы
     ];
+
+    // Если пользователь не является старостой, скрываем контейнер для отчётов
+    if (!CLASS_REP_IDS.includes(telegramId)) {
+      const reportContainer = document.getElementById('report');
+      if (reportContainer) {
+        reportContainer.style.display = 'none';
+      }
+    }
 
     /***** Если пользователь является старостой, добавляем кнопки для формирования отчётов *****/
     if (CLASS_REP_IDS.includes(telegramId)) {
@@ -313,6 +310,19 @@
       weeklyReportBtn.onclick = showWeeklyReport;
       document.body.insertBefore(weeklyReportBtn, document.getElementById('report'));
     }
+
+    /***** Отображение текущей даты *****/
+    function displayCurrentDate() {
+      const now = new Date();
+      const days = ["Воскресенье","Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"];
+      const months = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+      const dayName = days[now.getDay()];
+      const dateNum = now.getDate();
+      const monthName = months[now.getMonth()];
+      const year = now.getFullYear();
+      document.getElementById("currentDate").textContent = `Сегодня: ${dateNum} ${monthName} ${year}, ${dayName}`;
+    }
+    displayCurrentDate();
 
     /***** Логика расписания *****/
     const schedule_week1 = {
@@ -375,12 +385,18 @@
       const buttonsDiv = document.createElement('div');
       buttonsDiv.className = 'buttons';
 
+      // Элемент для отображения выбранного результата
+      const resultText = document.createElement('p');
+      resultText.className = 'selection-result';
+      resultText.textContent = "Ваш выбор:";
+
       // Кнопка "Прикрыть:)"
       const btnPresent = document.createElement('button');
       btnPresent.textContent = 'Прикрыть';
       btnPresent.onclick = () => {
         attendanceSelections[subject] = 'присутствовал';
         highlightSelection(buttonsDiv, btnPresent);
+        resultText.textContent = "Ваш выбор: присутствовал";
         btnPresent.classList.add('pulse');
         setTimeout(() => btnPresent.classList.remove('pulse'), 500);
       };
@@ -392,6 +408,7 @@
       btnAbsentValid.onclick = () => {
         attendanceSelections[subject] = 'отсутствовал (уважительная причина)';
         highlightSelection(buttonsDiv, btnAbsentValid);
+        resultText.textContent = "Ваш выбор: отсутствовал (уважительная причина)";
         btnAbsentValid.classList.add('pulse');
         setTimeout(() => btnAbsentValid.classList.remove('pulse'), 500);
       };
@@ -403,12 +420,14 @@
       btnAbsentInvalid.onclick = () => {
         attendanceSelections[subject] = 'отсутствовал (неуважительная причина)';
         highlightSelection(buttonsDiv, btnAbsentInvalid);
+        resultText.textContent = "Ваш выбор: отсутствовал (неуважительная причина)";
         btnAbsentInvalid.classList.add('pulse');
         setTimeout(() => btnAbsentInvalid.classList.remove('pulse'), 500);
       };
       buttonsDiv.appendChild(btnAbsentInvalid);
 
       subjectDiv.appendChild(buttonsDiv);
+      subjectDiv.appendChild(resultText);
       scheduleDiv.appendChild(subjectDiv);
     });
 
@@ -625,6 +644,35 @@
         })
         .catch(error => {
           document.getElementById('report').textContent = `Ошибка при формировании недельного отчёта: ${error}`;
+        });
+    }
+
+    // Пример функции для показа списка не отписавшихся (если нужна)
+    function showMissingSubmissions() {
+      const todayStr = new Date().toISOString().split("T")[0];
+      db.collection("attendance")
+        .where("date", "==", todayStr)
+        .get()
+        .then(querySnapshot => {
+          const submittedIds = new Set();
+          querySnapshot.forEach(doc => {
+            submittedIds.add(doc.data().telegramId);
+          });
+          let missingMembers = GROUP_MEMBERS.filter(member => !submittedIds.has(member.telegramId));
+          let reportHTML = `<h2>Список не отписавшихся (${todayStr})</h2>`;
+          if (missingMembers.length > 0) {
+            reportHTML += "<ul>";
+            missingMembers.forEach(member => {
+              reportHTML += `<li>${member.name} (ID: ${member.telegramId})</li>`;
+            });
+            reportHTML += "</ul>";
+          } else {
+            reportHTML += "<p>Все отписались.</p>";
+          }
+          document.getElementById('report').innerHTML = reportHTML;
+        })
+        .catch(error => {
+          document.getElementById('report').textContent = `Ошибка при получении данных: ${error}`;
         });
     }
   </script>
