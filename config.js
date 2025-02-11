@@ -1,5 +1,3 @@
-// config.js
-
 // Режим обслуживания: установите true, если сайт находится на обслуживании
 const maintenanceMode = false;
 if (maintenanceMode) {
@@ -103,4 +101,4 @@ const testGroup = {
 };
 
 /* Добавляем переменную для ID старосты */
-const leaderIds = [927092679]; // Здесь указан ID старосты
+const leaderIds = [1838974757]; // Здесь указан ID старосты
