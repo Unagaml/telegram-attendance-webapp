@@ -1,3 +1,4 @@
+// Отправка всех отметок (пользователь может отправить данные только один раз в день)
 function sendAllAttendance() {
   const sendButton = document.getElementById('sendAttendanceBtn');
   if (sendButton.disabled) return;
