@@ -1,4 +1,4 @@
-// Инициализация Telegram Web Apps (также используется в config.js, но здесь повторно для удобства)
+// Инициализация Telegram Web Apps
 const tg = window.Telegram.WebApp;
 tg.expand();
 
@@ -29,8 +29,15 @@ const groupId = currentGroup.id;
 const schedule_week1 = currentGroup.schedule_week1;
 const schedule_week2 = currentGroup.schedule_week2;
 
-// Флаг, определяющий, является ли пользователь старостой
+// Определяем, является ли пользователь старостой
 const isLeader = leaderIds.includes(telegramId);
+window.isLeader = isLeader; // делаем доступным для других файлов
+
+// Если пользователь — староста, скрываем интерфейс отметок
+if (isLeader) {
+  document.getElementById('schedule').style.display = "none";
+  document.getElementById('sendContainer').style.display = "none";
+}
 
 // Отображение даты и номера группы
 function displayCurrentDateAndGroup() {
@@ -46,7 +53,7 @@ function displayCurrentDateAndGroup() {
 }
 displayCurrentDateAndGroup();
 
-// После загрузки страницы (все скрипты уже подключены) добавляем кнопки для старосты, если нужно
+// После загрузки страницы добавляем кнопки отчётов для старосты
 window.addEventListener("load", function(){
   if (isLeader) {
     const reportContainer = document.getElementById('report');
