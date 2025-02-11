@@ -21,13 +21,13 @@ const todaySchedule = getTodaySchedule();
 // Глобальный объект для хранения отметок пользователя
 let attendanceSelections = {};
 
-// Функция для выделения выбранной кнопки (используется также в reports.js)
+// Функция выделения выбранной кнопки (также используется в reports.js)
 function highlightSelection(container, selectedButton) {
   Array.from(container.children).forEach(btn => btn.classList.remove('selected'));
   selectedButton.classList.add('selected');
 }
 
-// Отображение карточек расписания
+// Отображение карточек с расписанием
 const scheduleDiv = document.getElementById('schedule');
 todaySchedule.forEach(subject => {
   const subjectDiv = document.createElement('div');
@@ -40,7 +40,7 @@ todaySchedule.forEach(subject => {
   resultText.className = 'selection-result';
   resultText.textContent = "Ваш выбор:";
 
-  // Кнопки для выбора отметки
+  // Кнопка "Прикрыть:)"
   const btnPresent = document.createElement('button');
   btnPresent.textContent = 'Прикрыть';
   btnPresent.onclick = () => {
@@ -52,6 +52,7 @@ todaySchedule.forEach(subject => {
   };
   buttonsDiv.appendChild(btnPresent);
 
+  // Кнопка "Не буду (уважительная причина)"
   const btnAbsentValid = document.createElement('button');
   btnAbsentValid.textContent = 'Не буду (уважительная причина)';
   btnAbsentValid.onclick = () => {
@@ -63,6 +64,7 @@ todaySchedule.forEach(subject => {
   };
   buttonsDiv.appendChild(btnAbsentValid);
 
+  // Кнопка "Не буду (неуважительная причина)"
   const btnAbsentInvalid = document.createElement('button');
   btnAbsentInvalid.textContent = 'Не буду (неуважительная причина)';
   btnAbsentInvalid.onclick = () => {
