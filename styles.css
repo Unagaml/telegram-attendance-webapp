@@ -3,8 +3,8 @@ body {
   font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
-  background: #e8f5e9; /* Светло-зелёный фон */
-  color: #2e7d32;    /* Тёмно-зелёный текст */
+  background: #e8f5e9;
+  color: #2e7d32;
   overflow-x: hidden;
   font-size: 18px;
 }
@@ -16,7 +16,7 @@ h1 {
   font-size: 28px;
 }
 
-/* Стили для отображения даты и номера группы */
+/* Стили для даты и номера группы */
 #currentDate {
   text-align: center;
   font-size: 20px;
@@ -82,7 +82,7 @@ h1 {
   background: #388e3c;
 }
 
-/* Стили для глобальных кнопок (например, для отправки и отчётов) */
+/* Стили для глобальных кнопок (например, отправка и отчёты) */
 .report-btn {
   display: block;
   margin: 20px auto;
@@ -92,7 +92,7 @@ h1 {
   color: #fff;
   border: none;
   border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   cursor: pointer;
   transition: background 0.3s, transform 0.2s;
   width: 90%;
@@ -145,14 +145,8 @@ h1 {
 
 /* Анимации */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes pulse {
@@ -165,27 +159,28 @@ h1 {
   animation: pulse 0.5s;
 }
 
+/* Скрываем пустые блоки, чтобы не было лишнего прямоугольника */
+div:empty {
+  display: none;
+}
+
 /* Медиа-запросы для мобильных устройств */
 @media (max-width: 600px) {
   body {
     font-size: 18px;
     padding: 10px;
   }
-  
   h1 {
     font-size: 26px;
   }
-  
   .buttons button {
     font-size: 16px;
     padding: 12px 18px;
   }
-  
   .report-btn {
     font-size: 18px;
     padding: 14px 22px;
   }
-  
   #report h2 {
     font-size: 22px;
   }
