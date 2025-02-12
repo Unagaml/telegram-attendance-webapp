@@ -240,8 +240,10 @@
     const fullName = user.last_name ? `${user.first_name} ${user.last_name}` : user.first_name;
     const telegramId = user.id;
 
-    /***** Ограничение доступа: разрешены только пользователи, указанные в GROUP_MEMBERS *****/
-    // Список членов группы (разрешённых пользователей)
+    /***** Ограничение доступа *****
+     * Разрешаем вход пользователям, которые есть либо в списке членов группы (GROUP_MEMBERS),
+     * либо в списке старост (CLASS_REP_IDS)
+     */
     const GROUP_MEMBERS = [
       { telegramId: 927092679, name: "Иванов Егор" },
       { telegramId: 5299194206, name: "Хацкевич Влад" },
@@ -271,21 +273,20 @@
       { telegramId: 1164830732, name: "Ботвинников Артем" }
       // Добавьте остальных членов группы, если нужно
     ];
-    // Проверяем, есть ли telegramId пользователя в разрешённом списке
-    const allowedIDs = GROUP_MEMBERS.map(member => member.telegramId);
-    if (!allowedIDs.includes(telegramId)) {
+    // Массив ID старост
+    const CLASS_REP_IDS = [1838974757]; // Замените на реальные Telegram ID старост
+
+    if (!GROUP_MEMBERS.some(member => member.telegramId === telegramId) && !CLASS_REP_IDS.includes(telegramId)) {
       document.body.innerHTML = `
         <div style="text-align: center; margin-top: 50px;">
           <h1>Доступ запрещен</h1>
-          <p>Ваш аккаунт не имеет доступа к этому сайту.</p>
+          <p>Ваш аккаунт не имеет доступа к этому сайтом.</p>
         </div>
       `;
       throw new Error("Access denied");
     }
 
     /***** Настройки для старосты (только для старост) *****/
-    const CLASS_REP_IDS = [1838974757]; // Замените на реальные Telegram ID старост
-
     // Если пользователь не является старостой, скрываем контейнер для отчётов
     if (!CLASS_REP_IDS.includes(telegramId)) {
       const reportContainer = document.getElementById('report');
