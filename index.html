@@ -204,19 +204,6 @@
       throw new Error("Maintenance mode enabled");
     }
 
-    /***** ВАЖНО: Правила доступа Firestore *****
-     * Если появляется ошибка "FirebaseError: [code=permission-denied]: Missing or insufficient permissions",
-     * необходимо настроить правила доступа Firestore в консоли Firebase, например, для тестирования:
-     *
-     * service cloud.firestore {
-     *   match /databases/{database}/documents {
-     *     match /{document=**} {
-     *       allow read, write: if true;
-     *     }
-     *   }
-     * }
-     */
-
     /***** Инициализация Firebase *****/
     // Вставьте сюда свои данные из Firebase Console
     const firebaseConfig = {
@@ -411,9 +398,9 @@
       const btnPresent = document.createElement('button');
       btnPresent.textContent = 'Прикрыть';
       btnPresent.onclick = () => {
-        attendanceSelections[subject] = 'присутствовал';
+        attendanceSelections[subject] = 'Прикрыть';
         highlightSelection(buttonsDiv, btnPresent);
-        resultText.textContent = "Ваш выбор: присутствовал";
+        resultText.textContent = "Ваш выбор: Прикрыть";
         btnPresent.classList.add('pulse');
         setTimeout(() => btnPresent.classList.remove('pulse'), 500);
       };
@@ -433,11 +420,11 @@
 
       // Кнопка "Не буду (неуважительная причина)"
       const btnAbsentInvalid = document.createElement('button');
-      btnAbsentInvalid.textContent = 'Не буду (неуважительная причина)';
+      btnAbsentInvalid.textContent = 'Буду';
       btnAbsentInvalid.onclick = () => {
-        attendanceSelections[subject] = 'отсутствовал (неуважительная причина)';
+        attendanceSelections[subject] = 'Присутствовал';
         highlightSelection(buttonsDiv, btnAbsentInvalid);
-        resultText.textContent = "Ваш выбор: отсутствовал (неуважительная причина)";
+        resultText.textContent = "Ваш выбор: Присутствовал";
         btnAbsentInvalid.classList.add('pulse');
         setTimeout(() => btnAbsentInvalid.classList.remove('pulse'), 500);
       };
