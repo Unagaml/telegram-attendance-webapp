@@ -394,7 +394,7 @@
       resultText.className = 'selection-result';
       resultText.textContent = "Ваш выбор:";
 
-      // Кнопка "Прикрыть:)"
+      // Кнопка "Прикрыть"
       const btnPresent = document.createElement('button');
       btnPresent.textContent = 'Прикрыть';
       btnPresent.onclick = () => {
@@ -418,7 +418,7 @@
       };
       buttonsDiv.appendChild(btnAbsentValid);
 
-      // Кнопка "Не буду (неуважительная причина)"
+      // Кнопка "Буду"
       const btnAbsentInvalid = document.createElement('button');
       btnAbsentInvalid.textContent = 'Буду';
       btnAbsentInvalid.onclick = () => {
@@ -429,6 +429,18 @@
         setTimeout(() => btnAbsentInvalid.classList.remove('pulse'), 500);
       };
       buttonsDiv.appendChild(btnAbsentInvalid);
+
+      // Новая кнопка "Другая группа (занятия по подгруппам)"
+      const btnOtherGroup = document.createElement('button');
+      btnOtherGroup.textContent = 'Другая группа (занятия по подгруппам)';
+      btnOtherGroup.onclick = () => {
+        attendanceSelections[subject] = 'Другая группа (занятия по подгруппам)';
+        highlightSelection(buttonsDiv, btnOtherGroup);
+        resultText.textContent = 'Ваш выбор: Другая группа (занятия по подгруппам)';
+        btnOtherGroup.classList.add('pulse');
+        setTimeout(() => btnOtherGroup.classList.remove('pulse'), 500);
+      };
+      buttonsDiv.appendChild(btnOtherGroup);
 
       subjectDiv.appendChild(buttonsDiv);
       subjectDiv.appendChild(resultText);
